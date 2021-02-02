@@ -50,7 +50,7 @@ func AssertIntEqual(t *testing.T, expect, actual, errMsg string) {
 
 // GetConfigDirectory Get the configuration file path
 func GetConfigDirectory() string {
-	configBase := os.Getenv("CONFIG_BASE")
+	configBase := os.Getenv("RC_CONFIG_BASE")
 	if configBase == "" {
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
