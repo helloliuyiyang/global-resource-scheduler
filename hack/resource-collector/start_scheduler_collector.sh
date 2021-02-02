@@ -485,14 +485,11 @@ if [[ "${START_MODE}" != "kubeletonly" ]]; then
   fi
   start_kubedashboard
 
-  # export CONFIG_BASE for resource-collector
+  # export CONFIG_BASE for resource-collector and gs-scheduler
   export CONFIG_BASE=${KUBE_ROOT}/conf
 
-  echo "Staring gs-scheduler"
+  echo "Staring gs-scheduler..."
   kube::common::start_gs_scheduler 1 schedulername1
-
-  # export RC_CONFIG_BASE for resource-collector
-  export RC_CONFIG_BASE=${KUBE_ROOT}/conf
 
   echo "Starting resource collector..."
   kube::common::start_resource_collector
