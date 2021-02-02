@@ -104,7 +104,8 @@ do
 done
 
 if [ "x${GO_OUT}" == "x" ]; then
-    make -C "${KUBE_ROOT}" WHAT="cmd/kubectl cmd/hyperkube cmd/kube-apiserver cmd/kubelet cmd/kube-proxy cmd/kube-controller-manager globalscheduler/cmd/gs-controllers globalscheduler/cmd/dispatcher_process globalscheduler/cmd/distributor_process globalscheduler/cmd/scheduler_process globalscheduler/cmd/grpc-server globalscheduler/cmd/scheduler_process/mock_scheduler cmd/resource-collector"
+#    make -C "${KUBE_ROOT}" WHAT="cmd/kubectl cmd/hyperkube cmd/kube-apiserver cmd/kubelet cmd/kube-proxy cmd/kube-controller-manager globalscheduler/cmd/gs-controllers globalscheduler/cmd/dispatcher_process globalscheduler/cmd/distributor_process globalscheduler/cmd/scheduler_process globalscheduler/cmd/grpc-server globalscheduler/cmd/scheduler_process/mock_scheduler cmd/resource-collector cmd/gs-scheduler"
+    make -C "${KUBE_ROOT}" WHAT="cmd/kubectl cmd/hyperkube cmd/kube-apiserver cmd/kubelet cmd/kube-proxy cmd/kube-controller-manager globalscheduler/cmd/gs-controllers globalscheduler/cmd/dispatcher_process globalscheduler/cmd/distributor_process globalscheduler/cmd/scheduler_process globalscheduler/cmd/grpc-server globalscheduler/cmd/scheduler_process/mock_scheduler cmd/resource-collector cmd/gs-scheduler"
 else
     echo "skipped the build."
 fi
@@ -180,6 +181,10 @@ cleanup()
   [[ -n "${SCHEDULER_PID-}" ]] && mapfile -t SCHEDULER_PIDS < <(pgrep -P "${SCHEDULER_PID}" ; ps -o pid= -p "${SCHEDULER_PID}")
   [[ -n "${SCHEDULER_PIDS-}" ]] && sudo kill "${SCHEDULER_PIDS[@]}" 2>/dev/null
 
+  # Check if the gs-scheduler is still running
+  [[ -n "${GS_SCHEDULER_PID-}" ]] && mapfile -t GS_SCHEDULER_PIDS < <(pgrep -P "${GS_SCHEDULER_PID}" ; ps -o pid= -p "${GS_SCHEDULER_PID}")
+  [[ -n "${GS_SCHEDULER_PIDS-}" ]] && sudo kill "${GS_SCHEDULER_PIDS[@]}" 2>/dev/null
+
   # Check if the resource_collector is still running
   [[ -n "${RESOURCE_COLLECTOR_PID-}" ]] && mapfile -t RESOURCE_COLLECTOR_PIDS < <(pgrep -P "${RESOURCE_COLLECTOR_PID}" ; ps -o pid= -p "${RESOURCE_COLLECTOR_PID}")
   [[ -n "${RESOURCE_COLLECTOR_PIDS-}" ]] && sudo kill "${RESOURCE_COLLECTOR_PIDS[@]}" 2>/dev/null
@@ -233,6 +238,11 @@ function healthcheck {
 
   if [[ -n "${SCHEDULER_PID-}" ]] && ! sudo kill -0 "${SCHEDULER_PID}" 2>/dev/null; then
     warning_log "scheduler terminated unexpectedly, see ${SCHEDULER_LOG}"
+    SCHEDULER_PID=
+  fi
+
+  if [[ -n "${GS_SCHEDULER_PID-}" ]] && ! sudo kill -0 "${GS_SCHEDULER_PID}" 2>/dev/null; then
+    warning_log "gs-scheduler terminated unexpectedly, see ${GS_SCHEDULER_LOG}"
     SCHEDULER_PID=
   fi
 
@@ -474,6 +484,12 @@ if [[ "${START_MODE}" != "kubeletonly" ]]; then
     start_nodelocaldns
   fi
   start_kubedashboard
+
+  # export CONFIG_BASE for resource-collector
+  export CONFIG_BASE=${KUBE_ROOT}/conf
+
+  echo "Staring gs-scheduler"
+  kube::common::start_gs_scheduler
 
   # export RC_CONFIG_BASE for resource-collector
   export RC_CONFIG_BASE=${KUBE_ROOT}/conf
