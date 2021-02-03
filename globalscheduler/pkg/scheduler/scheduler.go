@@ -392,7 +392,7 @@ func (sched *Scheduler) Schedule2(ctx context.Context, allocation *types.Allocat
 	logger.Debug(ctx, "Attempting to schedule allocation: %v", allocation.ID)
 	startTime := time.Now()
 	defer func() {
-		logger.Infof("Finished Schedule %v", time.Since(startTime).Seconds())
+		logger.Infof("===Finished Schedule, Time consumption: %vs===", time.Since(startTime).Seconds())
 	}()
 
 	state := interfaces.NewCycleState()
