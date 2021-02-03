@@ -390,6 +390,10 @@ func (sched *Scheduler) bind(ctx context.Context, stack *types.Stack, targetSite
 // then starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Schedule2(ctx context.Context, allocation *types.Allocation) (result ScheduleResult, err error) {
 	logger.Debug(ctx, "Attempting to schedule allocation: %v", allocation.ID)
+	startTime := time.Now()
+	defer func() {
+		logger.Infof("Finished Schedule %v", time.Since(startTime).Seconds())
+	}()
 
 	state := interfaces.NewCycleState()
 	schedulingCycleCtx, cancel := context.WithCancel(ctx)
