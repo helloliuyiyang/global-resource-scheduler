@@ -148,6 +148,10 @@ func (sched *Scheduler) scheduleOne() {
 	// bind scheduler result to pod
 	logger.Infof("Try to bind to site, stacks:%v", result.Stacks)
 	sched.bindStacks(result.Stacks)
+
+	// log the elapsed time for the entire schedule
+	spendTime := time.Now().UnixNano() - stack.CreateTime
+	logger.Infof("===Finished Schedule, time consumption: %vms===", spendTime/int64(time.Millisecond))
 }
 
 // generateAllocationFromStack generate a new allocation obj from one single stack
@@ -390,10 +394,6 @@ func (sched *Scheduler) bind(ctx context.Context, stack *types.Stack, targetSite
 // then starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Schedule2(ctx context.Context, allocation *types.Allocation) (result ScheduleResult, err error) {
 	logger.Debug(ctx, "Attempting to schedule allocation: %v", allocation.ID)
-	startTime := time.Now()
-	defer func() {
-		logger.Infof("===Finished Schedule, Time consumption: %vs===", time.Since(startTime).Seconds())
-	}()
 
 	state := interfaces.NewCycleState()
 	schedulingCycleCtx, cancel := context.WithCancel(ctx)
