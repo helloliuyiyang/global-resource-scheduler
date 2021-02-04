@@ -77,7 +77,7 @@ func (s *ClusterProtocolServer) SendClusterProfile(ctx context.Context,
 			SiteAttributes:   nil,
 		}
 		col.SiteInfoCache.AddSite(siteInfo)
-		informers.InformerFac.SyncOnSiteChange()
+		//informers.InformerFac.SyncOnSiteChange()
 	case ClusterStatusDeleted:
 		logger.Infof("grpc.GrpcSendClusterProfile deleted- siteID[%s], IP[%s]", siteID, ip)
 		col.SiteInfoCache.RemoveSite(siteID)
