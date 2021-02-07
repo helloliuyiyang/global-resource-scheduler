@@ -197,7 +197,7 @@ type Site struct {
 	SiteAttribute []*typed.SiteAttribute  `json:"site_attributes"`
 	EipTypeName   string                  `json:"eiptype_name"`
 	SpotResources map[string]SpotResource `json:"spot_resources"`
-	Hosts         []typed.Host            `json:"-"`
+	Hosts         []*typed.Host            `json:"-"`
 }
 
 func (sn *Site) Clone() *Site {
