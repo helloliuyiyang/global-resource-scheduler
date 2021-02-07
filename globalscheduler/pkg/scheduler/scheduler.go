@@ -150,8 +150,10 @@ func (sched *Scheduler) scheduleOne() {
 	sched.bindStacks(result.Stacks)
 
 	// log the elapsed time for the entire schedule
-	spendTime := time.Now().UnixNano() - stack.CreateTime
-	logger.Infof("===Finished Schedule, time consumption: %vms===", spendTime/int64(time.Millisecond))
+	if stack.CreateTime != 0 {
+		spendTime := time.Now().UnixNano() - stack.CreateTime
+		logger.Infof("===Finished Schedule, time consumption: %vms===", spendTime/int64(time.Millisecond))
+	}
 }
 
 // generateAllocationFromStack generate a new allocation obj from one single stack
