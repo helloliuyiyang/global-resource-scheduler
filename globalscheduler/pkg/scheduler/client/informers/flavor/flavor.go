@@ -68,10 +68,9 @@ func NewFlavorInformer(client client.Interface, resyncPeriod time.Duration, name
 				return nil, errors.New("get site info failed")
 			}
 
-			var wg sync.WaitGroup
-
 			// Use map to deduplicate the same RegionFlavor
 			regionFlavorMap := make(map[string]typed.RegionFlavor)
+			var wg sync.WaitGroup
 			for siteID, info := range siteInfoCache.SiteInfoMap {
 				cloudClient, err := cloudclient.NewClientSet(info.EipNetworkID)
 				if err != nil {
@@ -99,7 +98,7 @@ func NewFlavorInformer(client client.Interface, resyncPeriod time.Duration, name
 			}
 			wg.Wait()
 
-			// result set, []*typed.RegionFlavor
+			// result set, []typed.RegionFlavor
 			var interfaceSlice []interface{}
 			for _, rf := range regionFlavorMap {
 				interfaceSlice = append(interfaceSlice, rf)

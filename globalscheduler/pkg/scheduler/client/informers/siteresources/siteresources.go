@@ -67,12 +67,9 @@ func NewSiteResourcesInformer(client client.Interface, reSyncPeriod time.Duratio
 				return nil, errors.New("get site info failed")
 			}
 
-			var wg sync.WaitGroup
-			var errs sync.Map
-			var rets sync.Map
-
-			// result set, []*typed.SiteResource
+			// result set, []typed.SiteResource
 			var interfaceSlice []interface{}
+			var wg sync.WaitGroup
 			for siteID, info := range siteInfoCache.SiteInfoMap {
 				cloudClient, err := cloudclient.NewClientSet(info.EipNetworkID)
 				if err != nil {
@@ -92,27 +89,15 @@ func NewSiteResourcesInformer(client client.Interface, reSyncPeriod time.Duratio
 					ret, err := getSiteResource(siteID, region, az, client)
 					if err != nil {
 						logger.Errorf("site[%s] list failed! err: %s", siteID, err.Error())
-						errs.Store(siteID, err)
 						return
 					}
-					rets.Store(siteID, ret)
+					interfaceSlice = append(interfaceSlice, ret)
 				}(siteID, info.Region, info.AvailabilityZone, client)
 			}
-
 			wg.Wait()
-
-			rets.Range(func(key, value interface{}) bool {
-				// each site
-				if sr, ok := value.(typed.SiteResource); ok {
-					interfaceSlice = append(interfaceSlice, sr)
-					return true
-				}
-				return false
-			})
 
 			return interfaceSlice, nil
 		}}, reSyncPeriod, name, key, nil)
-
 }
 
 // Get host resource information for each cluster(az) (goroutine concurrent execution)
