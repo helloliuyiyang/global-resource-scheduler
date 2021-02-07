@@ -18,8 +18,8 @@ OpenStackScopProjectName: "admin"
 OpenStackScopDomainID: "default"
 
 # Informer interval period
-FlavorInterval: 10
-SiteResourceInterval: 10
+FlavorInterval: 60
+SiteResourceInterval: 60
 VolumePoolInterval: 60
 VolumeTypeInterval: 600
 EipPoolInterval: 60

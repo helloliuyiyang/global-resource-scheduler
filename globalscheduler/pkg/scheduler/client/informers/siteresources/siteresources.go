@@ -103,7 +103,7 @@ func NewSiteResourcesInformer(client client.Interface, reSyncPeriod time.Duratio
 
 			rets.Range(func(key, value interface{}) bool {
 				// each site
-				if sr, ok := value.(*typed.SiteResource); ok {
+				if sr, ok := value.(typed.SiteResource); ok {
 					interfaceSlice = append(interfaceSlice, sr)
 					return true
 				}
@@ -140,7 +140,7 @@ func getSiteResource(siteID, region, az string, client *gophercloud.ServiceClien
 		}
 		hosts = append(hosts, host)
 	}
-	sr := &typed.SiteResource{
+	sr := typed.SiteResource{
 		SiteID:           siteID,
 		Region:           region,
 		AvailabilityZone: az,

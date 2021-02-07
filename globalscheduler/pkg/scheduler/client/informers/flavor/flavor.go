@@ -70,8 +70,8 @@ func NewFlavorInformer(client client.Interface, resyncPeriod time.Duration, name
 
 			var wg sync.WaitGroup
 
-			// result set, []*typed.RegionFlavor
-			var interfaceSlice []interface{}
+			// Use map to deduplicate the same RegionFlavor
+			regionFlavorMap := make(map[string]typed.RegionFlavor)
 			for siteID, info := range siteInfoCache.SiteInfoMap {
 				cloudClient, err := cloudclient.NewClientSet(info.EipNetworkID)
 				if err != nil {
@@ -87,32 +87,29 @@ func NewFlavorInformer(client client.Interface, resyncPeriod time.Duration, name
 				wg.Add(1)
 				go func(siteID, region string, client *gophercloud.ServiceClient) {
 					defer wg.Done()
-					ret, err := getRegionFlavors(region, client)
+					regionFlavors, err := getRegionFlavors(region, client)
 					if err != nil {
 						logger.Errorf("site[%s] list failed! err: %s", siteID, err.Error())
 						return
 					}
-					interfaceSlice = append(interfaceSlice, ret)
+					for _, rf := range regionFlavors {
+						regionFlavorMap[rf.RegionFlavorID] = rf
+					}
 				}(siteID, info.Region, client)
 			}
-
 			wg.Wait()
 
-			//rets.Range(func(key, value interface{}) bool {
-			//	// each site
-			//	if sr, ok := value.(*typed.RegionFlavor); ok {
-			//		interfaceSlice = append(interfaceSlice, sr)
-			//		return true
-			//	}
-			//	return false
-			//})
-
+			// result set, []*typed.RegionFlavor
+			var interfaceSlice []interface{}
+			for _, rf := range regionFlavorMap {
+				interfaceSlice = append(interfaceSlice, rf)
+			}
 			return interfaceSlice, nil
 		}}, resyncPeriod, name, key, typed.ListOpts{})
 }
 
 // Get flavor information for each cluster(az) (goroutine concurrent execution)
-func getRegionFlavors(region string, client *gophercloud.ServiceClient) ([]*typed.RegionFlavor, error) {
+func getRegionFlavors(region string, client *gophercloud.ServiceClient) ([]typed.RegionFlavor, error) {
 	flasPages, err := flavors.ListDetail(client, flavors.ListOpts{}).AllPages()
 	if err != nil {
 		logger.Errorf("flavor list failed! err: %s", err.Error())
@@ -124,7 +121,7 @@ func getRegionFlavors(region string, client *gophercloud.ServiceClient) ([]*type
 		return nil, err
 	}
 	//var interfaceSlice []interface{}
-	ret := make([]*typed.RegionFlavor, 0)
+	ret := make([]typed.RegionFlavor, 0)
 	for _, flavor := range flas {
 		flv := typed.Flavor{
 			ID:    flavor.Name, // eg: "m1.small"
@@ -135,7 +132,7 @@ func getRegionFlavors(region string, client *gophercloud.ServiceClient) ([]*type
 				ResourceType: "default",
 			},
 		}
-		regionFlv := &typed.RegionFlavor{
+		regionFlv := typed.RegionFlavor{
 			RegionFlavorID: region + "|" + flavor.Name,
 			Region:         region,
 			Flavor:         flv,
