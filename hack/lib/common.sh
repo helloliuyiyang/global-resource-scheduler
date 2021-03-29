@@ -484,7 +484,7 @@ function kube::common::start_kubescheduler {
 function kube::common::start_gs_scheduler {
     CONTROLPLANE_SUDO=$(test -w "${CERT_DIR}" || echo "sudo -E")
     GS_SCHEDULER_LOG=${LOG_DIR}/gs-scheduler$1.log
-    ${CONTROLPLANE_SUDO} "${GO_OUT}/gs-scheduler" --schedulername="$2"  > "${GS_SCHEDULER_LOG}" 2>&1 &
+    ${CONTROLPLANE_SUDO} "${GO_OUT}/gs-scheduler" --schedulername="$2" --ipAddress="$3" --portNumber="$4" > "${GS_SCHEDULER_LOG}" 2>&1 &
     GS_SCHEDULER_PID=$!
 }
 
@@ -660,9 +660,11 @@ function kube::common::generate_kubeproxy_certs {
 function kube::common::start_gs_controllers {
     CONTROLPLANE_SUDO=$(test -w "${CERT_DIR}" || echo "sudo -E")
     kubeconfigfilepaths="${CERT_DIR}/admin.kubeconfig"
+
+    ${CONTROLPLANE_SUDO} cp ${KUBE_ROOT}/hack/globalscheduler/config.yaml ${CERT_DIR}/config.yaml
     
     GRS_LOG=${LOG_DIR}/global-resource-scheduler.log
-    ${CONTROLPLANE_SUDO} ${GO_OUT}/gs-controllers -kubeconfig "${kubeconfigfilepaths}"  >"${GRS_LOG}" 2>&1 &
+    ${CONTROLPLANE_SUDO} ${GO_OUT}/gs-controllers -kubeconfig "${kubeconfigfilepaths}" >"${GRS_LOG}" 2>&1 &
       # TODO need to add log level in the future for debugging
       #--v="${LOG_LEVEL}" \
     GRS_PID=$!
